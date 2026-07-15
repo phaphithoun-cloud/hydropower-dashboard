@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="lo">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ສູນຂໍ້ມູນພະລັງງານໄຟຟ້ານໍ້າ — Hydropower Data Center</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+
+<style>
+  :root{
+    --bg:#0a141f;
+    --bg-grad: radial-gradient(1200px 600px at 85% -10%, #0f2436 0%, #0a141f 55%);
+    --panel:#101e30;
+    --panel-alt:#132539;
+    --panel-soft:#0d1b2b;
+    --border:#20374f;
+    --border-soft:#182c42;
+    --text:#e9f0f6;
+    --text-muted:#83a0b8;
+    --text-dim:#5a7690;
+    --teal:#2ad6c4;
+    --teal-dim:rgba(42,214,196,.16);
+    --amber:#f2ab3d;
+    --violet:#a48af0;
+    --violet-dim:rgba(164,138,240,.16);
+    --rose:#ef6a86;
+    --green:#5fd07f;
+    --radius:12px;
+    --mono: 'IBM Plex Mono', ui-monospace, monospace;
+    --sans: 'IBM Plex Sans', system-ui, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background: var(--bg-grad);
+    color:var(--text);
+    font-family:var(--sans);
+    min-height:100vh;
+  }
+  a{color:var(--teal);}
+
+  /* ---------- Header ---------- */
+  header{
+    padding:22px 28px 18px;
+    border-bottom:1px solid var(--border-soft);
+    display:flex; flex-wrap:wrap; gap:18px; align-items:flex-end; justify-content:space-between;
+  }
+  .brand{display:flex; flex-direction:column; gap:4px;}
+  .brand .eyebrow{
+    font-family:var(--mono); font-size:11px; letter-spacing:.14em; color:var(--teal); text-transform:uppercase;
+  }
+  .brand h1{margin:0; font-size:22px; font-weight:700; letter-spacing:-0.01em;}
+  .brand .sub{color:var(--text-muted); font-size:13px;}
+
+  .fleet-gauge{
+    display:flex; align-items:center; gap:12px;
+    background:var(--panel); border:1px solid var(--border); border-radius:999px;
+    padding:8px 16px 8px 8px; min-width:280px;
+  }
+  .fleet-gauge .ring{
+    width:40px; height:40px; border-radius:50%;
+    background: conic-gradient(var(--teal) calc(var(--pct,0)*1%), var(--border-soft) 0);
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+  .fleet-gauge .ring::after{
+    content:''; width:30px; height:30px; border-radius:50%; background:var(--panel);
+  }
+  .fleet-gauge .ring-label{
+    position:absolute; font-family:var(--mono); font-size:10px; color:var(--teal);
+  }
+  .fleet-gauge .txt{display:flex; flex-direction:column; line-height:1.25;}
+  .fleet-gauge .txt .k{font-size:10px; color:var(--text-dim); font-family:var(--mono); text-transform:uppercase; letter-spacing:.08em;}
+  .fleet-gauge .txt .v{font-family:var(--mono); font-size:16px; font-weight:600;}
+
+  /* ---------- Data source bar ---------- */
+  .datasrc{
+    margin:16px 28px 0; background:var(--panel); border:1px solid var(--border); border-radius:var(--radius);
+    overflow:hidden;
+  }
+  .datasrc-head{
+    display:flex; align-items:center; justify-content:space-between; padding:12px 16px; cursor:pointer;
+    gap:12px; flex-wrap:wrap;
+  }
+  .datasrc-head .status{display:flex; align-items:center; gap:8px; font-size:13px;}
+  .dot{width:8px; height:8px; border-radius:50%; background:var(--text-dim); flex-shrink:0;}
+  .dot.ok{background:var(--green); box-shadow:0 0 8px var(--green);}
+  .dot.warn{background:var(--amber);}
+  .dot.err{background:var(--rose);}
+  .chev{color:var(--text-dim); font-size:12px; transition:transform .2s;}
+  .datasrc.open .chev{transform:rotate(180deg);}
+  .datasrc-body{
+    display:none; padding:0 16px 16px; border-top:1px solid var(--border-soft);
+  }
+  .datasrc.open .datasrc-body{display:block;}
+  .datasrc-body .row{display:flex; gap:10px; margin-top:14px; flex-wrap:wrap; align-items:center;}
+  .datasrc-body input[type=text]{
+    flex:1; min-width:240px; background:var(--panel-soft); border:1px solid var(--border); color:var(--text);
+    border-radius:8px; padding:9px 12px; font-family:var(--mono); font-size:12.5px;
+  }
+  .btn{
+    background:var(--teal); color:#062723; border:none; border-radius:8px; padding:9px 16px;
+    font-family:var(--sans); font-weight:600; font-size:13px; cursor:pointer; white-space:nowrap;
+  }
+  .btn:hover{filter:brightness(1.08);}
+  .btn.secondary{background:transparent; color:var(--text); border:1px solid var(--border);}
+  .drop-zone{
+    margin-top:14px; border:1.5px dashed var(--border); border-radius:10px; padding:22px;
+    text-align:center; color:var(--text-muted); font-size:13px; transition:.15s;
+  }
+  .drop-zone.drag{border-color:var(--teal); background:var(--teal-dim); color:var(--text);}
+  .drop-zone input{display:none;}
+  .help-note{font-size:12px; color:var(--text-dim); margin-top:10px; line-height:1.6;}
+  .help-note b{color:var(--text-muted);}
+  .help-note code{background:var(--panel-soft); padding:1px 5px; border-radius:4px; font-family:var(--mono);}
+
+  /* ---------- Layout ---------- */
+  .layout{display:grid; grid-template-columns:230px 1fr; gap:18px; padding:18px 28px 40px;}
+  @media (max-width:860px){ .layout{grid-template-columns:1fr;} }
+
+  .sidebar{display:flex; flex-direction:column; gap:14px;}
+  .card{background:var(--panel); border:1px solid var(--border); border-radius:var(--radius); padding:14px;}
+  .card h3{
+    margin:0 0 10px; font-size:11px; text-transform:uppercase; letter-spacing:.1em; color:var(--text-dim);
+    font-family:var(--mono); font-weight:600;
+  }
+  .chip-list{display:flex; flex-direction:column; gap:6px; max-height:260px; overflow:auto;}
+  .chip{
+    display:flex; align-items:center; gap:8px; padding:7px 9px; border-radius:8px; cursor:pointer;
+    border:1px solid transparent; font-size:13px; user-select:none;
+  }
+  .chip:hover{background:var(--panel-alt);}
+  .chip input{accent-color:var(--teal); width:14px; height:14px;}
+  .chip.active{background:var(--teal-dim); border-color:rgba(42,214,196,.35);}
+  select, input[type=date]{
+    width:100%; background:var(--panel-soft); border:1px solid var(--border); color:var(--text);
+    border-radius:8px; padding:9px 10px; font-family:var(--sans); font-size:13px;
+  }
+  .hint{font-size:11.5px; color:var(--text-dim); margin-top:8px; line-height:1.6;}
+
+  .main{display:flex; flex-direction:column; gap:16px;}
+  .chart-card{background:var(--panel); border:1px solid var(--border); border-radius:var(--radius); padding:16px 18px;}
+  .chart-card h4{margin:0 0 4px; font-size:14px; font-weight:600;}
+  .chart-card .chart-sub{font-size:12px; color:var(--text-muted); margin-bottom:10px; font-family:var(--mono);}
+  .chart-wrap{position:relative; height:260px;}
+
+  .kpi-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px;}
+  .kpi{background:var(--panel); border:1px solid var(--border); border-radius:var(--radius); padding:14px 16px;}
+  .kpi .k{font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:var(--text-dim); font-family:var(--mono);}
+  .kpi .v{font-family:var(--mono); font-size:20px; font-weight:600; margin-top:4px;}
+  .kpi .v small{font-size:12px; color:var(--text-muted); font-weight:400;}
+  .kpi .v.good{color:var(--green);}
+  .kpi .v.warn{color:var(--amber);}
+  .kpi .v.bad{color:var(--rose);}
+
+  .empty{
+    padding:60px 20px; text-align:center; color:var(--text-muted); font-size:14px;
+  }
+  .empty b{color:var(--text);}
+
+  footer{padding:20px 28px 40px; color:var(--text-dim); font-size:11.5px; font-family:var(--mono);}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="eyebrow">Hydropower Data Center</div>
+    <h1>ສູນຂໍ້ມູນພະລັງງານໄຟຟ້ານໍ້າ — Dashboard</h1>
+    <div class="sub" id="dataAsOfLine">ຍັງບໍ່ໄດ້ໂຫຼດຂໍ້ມູນ — ກະລຸນາໂຫຼດໄຟລ໌ Excel ດ້ານລຸ່ມ</div>
+  </div>
+  <div class="fleet-gauge">
+    <div style="position:relative;">
+      <div class="ring" id="fleetRing" style="--pct:0"></div>
+      <div class="ring-label" style="left:6px; top:14px;" id="fleetRingPct">--%</div>
+    </div>
+    <div class="txt">
+      <div class="k">Fleet Reservoir (all sites)</div>
+      <div class="v" id="fleetRingVal">-- % · -- MCM</div>
+    </div>
+  </div>
+</header>
+
+<div class="datasrc open" id="datasrc">
+  <div class="datasrc-head" onclick="toggleDataSrc()">
+    <div class="status"><span class="dot" id="statusDot"></span><span id="statusText">ບໍ່ມີຂໍ້ມູນ — ໂຫຼດໄຟລ໌ Excel ເພື່ອເລີ່ມ</span></div>
+    <span class="chev">▾</span>
+  </div>
+  <div class="datasrc-body">
+    <div class="row">
+      <input type="text" id="urlInput" placeholder="ວາງ Direct-download link ຂອງ OneDrive/SharePoint ທີ່ນີ້ (ເບິ່ງຄຳແນະນຳລຸ່ມ)">
+      <button class="btn" onclick="loadFromUrlInput()">ໂຫຼດຈາກ Link</button>
+    </div>
+    <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+      📂 ລາກໄຟລ໌ Excel ມາວາງທີ່ນີ້ ຫຼື <b style="color:var(--teal)">ຄລິກເພື່ອເລືອກໄຟລ໌</b>
+      <input type="file" id="fileInput" accept=".xlsx,.xlsm">
+    </div>
+    <div class="help-note">
+      <b>ວິທີອັບເດດຂໍ້ມູນທຸກມື້:</b> ອັບໂຫຼດ/save ໄຟລ໌ Excel ໃໝ່ໃສ່ OneDrive/SharePoint ຄືເກົ່າ.
+      ຫາກ Dashboard ນີ້ຖືກຕັ້ງໃຫ້ໂຫຼດຈາກ link ອັດຕະໂນມັດ (ແກ້ໄຂຄ່າ <code>EXCEL_URL</code> ໃນຕົ້ນໄຟລ໌ HTML)
+      ຄົນທີ່ເປີດໜ້ານີ້ຈະເຫັນຂໍ້ມູນຫຼ້າສຸດທັນທີ ໂດຍບໍ່ຕ້ອງເຮັດຫຍັງເພີ່ມ.<br>
+      <b>ວິທີເອົາ direct-download link ຈາກ OneDrive:</b> ຄລິກຂວາໄຟລ໌ → Share → "Anyone with the link" →
+      Copy link, ແລ້ວປ່ຽນ <code>?e=xxxxx</code> ໃນທ້າຍ URL ເປັນ <code>?download=1</code>.
+      ຖ້າໂຫຼດຈາກ link ບໍ່ໄດ້ (ຄວາມຜິດພາດ CORS) — ອົງກອນຂອງທ່ານອາດຈະປິດການເຂົ້າເຖິງແບບ cross-origin;
+      ໃນກໍລະນີນັ້ນໃຫ້ໃຊ້ວິທີ "ລາກໄຟລ໌ມາວາງ" ຂ້າງເທິງແທນ (ດາວໂຫຼດໄຟລ໌ຫຼ້າສຸດຈາກ OneDrive ແລ້ວລາກມາວາງ),
+      ຫຼື ພິຈາລະນາເກັບໄຟລ໌ Excel ໄວ້ໃນ GitHub repo ດຽວກັນກັບໜ້າເວັບນີ້ (raw.githubusercontent.com ຮອງຮັບ CORS ໄດ້ດີກວ່າ).
+    </div>
+  </div>
+</div>
+
+<div class="layout" id="layout" style="display:none;">
+  <div class="sidebar">
+    <div class="card">
+      <h3>Site(s)</h3>
+      <div class="chip-list" id="siteList"></div>
+    </div>
+    <div class="card">
+      <h3>Year(s)</h3>
+      <div class="chip-list" id="yearList"></div>
+      <div class="hint">ເລືອກ 2+ ປີ ເພື່ອປຽບທຽບແຕ່ລະປີ (ວາງຊ້ອນຕາມວັນທີ່ປະຕິທິນ). ເລືອກ 1 ປີ ເພື່ອປຽບທຽບລະຫວ່າງໄຊต์.</div>
+    </div>
+    <div class="card">
+      <h3>Metric</h3>
+      <select id="metricSelect"></select>
+    </div>
+    <div class="card">
+      <h3>As of date</h3>
+      <input type="date" id="asOfInput">
+      <div class="hint">ສະແດງ Year-To-Date: 1-ມ.ກ. ຫາ ວັນ/ເດືອນນີ້ ຂອງທຸກປີທີ່ເລືອກ.</div>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="chart-card">
+      <h4 id="chart1Title">—</h4>
+      <div class="chart-sub" id="chart1Sub"></div>
+      <div class="chart-wrap"><canvas id="chart1"></canvas></div>
+    </div>
+    <div class="chart-card" id="chart2Card">
+      <h4 id="chart2Title">—</h4>
+      <div class="chart-sub" id="chart2Sub"></div>
+      <div class="chart-wrap"><canvas id="chart2"></canvas></div>
+    </div>
+    <div class="kpi-grid" id="kpiGrid"></div>
+  </div>
+</div>
+
+<div class="empty" id="emptyState">
+  ຍັງບໍ່ມີຂໍ້ມູນສະແດງ — ໂຫຼດໄຟລ໌ <b>DATA_CENTER_for_CSE_DOM_HPP.xlsx</b> ຈາກແຖບດ້ານເທິງ (ລາກໄຟລ໌ມາວາງ ຫຼື ວາງ link)
+</div>
+
+<footer>Hydropower Data Center Dashboard · ອ່ານຂໍ້ມູນຈາກ Sheet "DATA" ໂດຍກົງໃນ browser (client-side, ບໍ່ມີ server) · v1.0</footer>
+
+<script>
+/* =========================================================================
+   CONFIG — edit EXCEL_URL below to a direct-download OneDrive/SharePoint
+   link so this page auto-loads the latest file for every visitor without
+   anyone pasting a link or uploading a file manually.
+   ========================================================================= */
+const CONFIG = {
+  EXCEL_URL: ''   // e.g. 'https://your-tenant-my.sharepoint.com/.../DATA_CENTER_for_CSE_DOM_HPP.xlsx?download=1'
+};
+
+/* ---------- Column map (matches the workbook's DATA sheet layout) ---------- */
+const SITES = [
+  { key:'NEM',        rain:'B',  planin:'C',  waterin:'D',  resvol:'F',  respct:'G',  usevol:'H',  usepct:'I',  wl:'L',  wlmax:'J',  wlmin:'K',  eplan:'N',  eact:'O'  },
+  { key:'NK3',         rain:'P',  planin:'Q',  waterin:'R',  resvol:'T',  respct:'U',  usevol:'V',  usepct:'W',  wl:'AA', wlmax:'X',  wlmin:'Y',  eplan:'AB', eact:'AC' },
+  { key:'NK2',         rain:'AD', planin:'AE', waterin:'AF', resvol:'AH', respct:'AI', usevol:'AJ', usepct:'AK', wl:'AO', wlmax:'AL', wlmin:'AM', eplan:'AP', eact:'AQ' },
+  { key:'NNG3A',       rain:'AR', planin:'AS', waterin:'AT', resvol:'AV', respct:'AW', usevol:'AX', usepct:'AY', wl:'BB', wlmax:'AZ', wlmin:'BA', eplan:'BC', eact:'BD' },
+  { key:'XNN1',        rain:'BE', planin:'BF', waterin:'BG', resvol:'BI', respct:'BJ', usevol:'BK', usepct:'BL', wl:'BO', wlmax:'BM', wlmin:'BN', eplan:'BP', eact:'BQ' },
+  { key:'NSPC (US)',   rain:'BR', planin:'BS', waterin:'BT', resvol:'BV', respct:'BW', usevol:'BX', usepct:'BY', wl:'CC', wlmax:'BZ', wlmin:'CA', eplan:'CD', eact:'CE' },
+  { key:'NSPC (DS)',   rain:'CF', planin:'CG', waterin:'CH', resvol:'CJ', respct:'CK', usevol:'CL', usepct:'CM', wl:'CQ', wlmax:'CN', wlmin:'CO', eplan:'CR', eact:'CS' },
+];
+
+const METRICS = [
+  { id:'rain',    label:'Rainfall (mm)',                         field:'rain',   combineDefault:'sum',  unit:'mm',  volume:false, plan:null },
+  { id:'respct',  label:'Reservoir %',                            field:'respct', combineDefault:'each', unit:'%',   volume:false, plan:null, volField:'resvol', volLabel:'Reservoir Volume (MCM)' },
+  { id:'usepct',  label:'Usable Water %',                         field:'usepct', combineDefault:'each', unit:'%',   volume:false, plan:null, volField:'usevol', volLabel:'Usable Water Volume (MCM)' },
+  { id:'wl',      label:'Water Level (masl)',                     field:'wl',     combineDefault:'each', unit:'masl',volume:false, plan:null },
+  { id:'energy',  label:'Energy: Plan vs Actual (GWh)',           field:'eact',   combineDefault:'sum',  unit:'GWh', volume:false, plan:'eplan' },
+  { id:'inflow',  label:'Water Inflow: Plan vs Actual (MCM)',     field:'waterin',combineDefault:'sum',  unit:'MCM', volume:true,  plan:'planin' },
+];
+
+const SITE_COLORS  = ['#2ad6c4','#f2ab3d','#5b9df0','#ef6a86','#a48af0','#5fd07f','#e0a3e6'];
+const YEAR_COLORS  = ['#7e93ab','#5b9df0','#5fd07f','#f2ab3d','#ef6a86','#a48af0'];
+
+/* ---------- State ---------- */
+let ROWS = [];          // array of {date:Date, y, m, d, cols:{...}} — cols keyed by Excel column letter
+let INDEX = new Map();  // 'y-m-d' -> row
+let AVAIL_YEARS = [];
+let LATEST_ACTUAL_DATE = null;
+let chart1 = null, chart2 = null;
+
+/* ---------- Excel column letter -> 0-based index ---------- */
+function colIdx(letter){
+  let n = 0;
+  for (const ch of letter) n = n*26 + (ch.charCodeAt(0) - 64);
+  return n - 1;
+}
+
+/* ---------- UI: data source panel ---------- */
+function toggleDataSrc(){ document.getElementById('datasrc').classList.toggle('open'); }
+function setStatus(kind, text){
+  const dot = document.getElementById('statusDot');
+  dot.className = 'dot ' + kind;
+  document.getElementById('statusText').textContent = text;
+}
+
+document.getElementById('fileInput').addEventListener('change', e => {
+  if (e.target.files[0]) handleFile(e.target.files[0]);
+});
+const dz = document.getElementById('dropZone');
+dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag'); });
+dz.addEventListener('dragleave', () => dz.classList.remove('drag'));
+dz.addEventListener('drop', e => {
+  e.preventDefault(); dz.classList.remove('drag');
+  if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+});
+
+function handleFile(file){
+  setStatus('warn', 'ກຳລັງອ່ານໄຟລ໌ ' + file.name + ' ...');
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try{
+      parseWorkbook(ev.target.result);
+      setStatus('ok', 'ໂຫຼດສຳເລັດ: ' + file.name);
+      document.getElementById('datasrc').classList.remove('open');
+    }catch(err){
+      console.error(err);
+      setStatus('err', 'ອ່ານໄຟລ໌ບໍ່ສຳເລັດ: ' + err.message);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function loadFromUrlInput(){
+  const url = document.getElementById('urlInput').value.trim();
+  if (!url) return;
+  loadFromUrl(url);
+}
+
+async function loadFromUrl(url){
+  setStatus('warn', 'ກຳລັງດຶງໄຟລ໌ຈາກ link ...');
+  try{
+    const res = await fetch(url, { mode:'cors' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const buf = await res.arrayBuffer();
+    parseWorkbook(buf);
+    setStatus('ok', 'ໂຫຼດຈາກ link ສຳເລັດ');
+    document.getElementById('datasrc').classList.remove('open');
+  }catch(err){
+    console.error(err);
+    setStatus('err', 'ດຶງຈາກ link ບໍ່ສຳເລັດ (ອາດຕິດ CORS/ສິດເຂົ້າເຖິງ) — ລອງໃຊ້ "ລາກໄຟລ໌ມາວາງ" ແທນ');
+  }
+}
+
+/* ---------- Parse workbook ---------- */
+function parseWorkbook(arrayBufferOrData){
+  const data = arrayBufferOrData instanceof ArrayBuffer ? new Uint8Array(arrayBufferOrData) : arrayBufferOrData;
+  const wb = XLSX.read(data, { type:'array', cellDates:true });
+  if (!wb.SheetNames.includes('DATA')) throw new Error('ບໍ່ພົບ Sheet ຊື່ "DATA" ໃນໄຟລ໌ນີ້');
+  const sheet = wb.Sheets['DATA'];
+  const aoa = XLSX.utils.sheet_to_json(sheet, { header:1, range:2, raw:true, defval:null });
+
+  ROWS = []; INDEX = new Map();
+  for (const row of aoa){
+    const dt = row[0];
+    if (!(dt instanceof Date) || isNaN(dt)) continue;
+    const y = dt.getFullYear(), m = dt.getMonth()+1, d = dt.getDate();
+    const rec = { date:dt, y, m, d, row };
+    ROWS.push(rec);
+    INDEX.set(`${y}-${m}-${d}`, rec);
+  }
+  if (ROWS.length === 0) throw new Error('ບໍ່ພົບແຖວຂໍ້ມູນທີ່ມີວັນທີ່ຖືກຕ້ອງ');
+
+  AVAIL_YEARS = [...new Set(ROWS.map(r => r.y))].sort();
+
+  // latest date with real "actual energy" data for NEM, used as default As-of date
+  const eactIdx = colIdx(SITES[0].eact);
+  const withActual = ROWS.filter(r => typeof r.row[eactIdx] === 'number');
+  LATEST_ACTUAL_DATE = withActual.length ? withActual[withActual.length-1].date : ROWS[ROWS.length-1].date;
+
+  buildSidebar();
+  document.getElementById('layout').style.display = 'grid';
+  document.getElementById('emptyState').style.display = 'none';
+  document.getElementById('dataAsOfLine').textContent =
+    'ຂໍ້ມູນຫຼ້າສຸດຮອດວັນທີ ' + fmtDate(LATEST_ACTUAL_DATE) + ' · ' + ROWS.length + ' ແຖວ (' + AVAIL_YEARS[0] + '–' + AVAIL_YEARS[AVAIL_YEARS.length-1] + ')';
+
+  render();
+}
+
+/* ---------- Sidebar ---------- */
+function buildSidebar(){
+  const siteList = document.getElementById('siteList');
+  siteList.innerHTML = '';
+  SITES.forEach((s, i) => {
+    const id = 'site_' + i;
+    const div = document.createElement('label');
+    div.className = 'chip active';
+    div.innerHTML = `<input type="checkbox" id="${id}" ${i===0?'checked':''}> ${s.key}`;
+    div.querySelector('input').addEventListener('change', () => { div.classList.toggle('active'); render(); });
+    siteList.appendChild(div);
+  });
+
+  const yearList = document.getElementById('yearList');
+  yearList.innerHTML = '';
+  AVAIL_YEARS.forEach((y, i) => {
+    const id = 'year_' + y;
+    const div = document.createElement('label');
+    const isLatest = y === AVAIL_YEARS[AVAIL_YEARS.length-1];
+    div.className = 'chip' + (isLatest ? ' active' : '');
+    div.innerHTML = `<input type="checkbox" id="${id}" ${isLatest?'checked':''}> ${y}`;
+    div.querySelector('input').addEventListener('change', () => { div.classList.toggle('active'); render(); });
+    yearList.appendChild(div);
+  });
+
+  const metricSel = document.getElementById('metricSelect');
+  metricSel.innerHTML = '';
+  METRICS.forEach(m => {
+    const opt = document.createElement('option');
+    opt.value = m.id; opt.textContent = m.label;
+    metricSel.appendChild(opt);
+  });
+  metricSel.addEventListener('change', render);
+
+  const asOf = document.getElementById('asOfInput');
+  asOf.value = LATEST_ACTUAL_DATE.toISOString().slice(0,10);
+  asOf.min = `${AVAIL_YEARS[0]}-01-01`;
+  asOf.max = `${AVAIL_YEARS[AVAIL_YEARS.length-1]}-12-31`;
+  asOf.addEventListener('change', render);
+}
+
+function getSelectedSites(){
+  const out = [];
+  document.querySelectorAll('#siteList input').forEach((cb, i) => { if (cb.checked) out.push(SITES[i]); });
+  return out.length ? out : [SITES[0]];
+}
+function getSelectedYears(){
+  const out = [];
+  document.querySelectorAll('#yearList input').forEach(cb => { if (cb.checked) out.push(parseInt(cb.id.replace('year_',''))); });
+  out.sort((a,b)=>a-b);
+  return out.length ? out : [AVAIL_YEARS[AVAIL_YEARS.length-1]];
+}
+
+/* ---------- Date helpers ---------- */
+function fmtDate(d){ return d.toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' }); }
+function clampDay(y, m, d){
+  const last = new Date(y, m, 0).getDate(); // days in month m (1-indexed)
+  return Math.min(d, last);
+}
+// canonical Jan-1 .. cutoff (m,d) day list, built off a leap reference year so Feb-29 is included when relevant
+function buildCanonicalDays(coM, coD){
+  const days = [];
+  let cur = new Date(2024, 0, 1);
+  const end = new Date(2024, coM-1, clampDay(2024, coM, coD));
+  while (cur <= end){
+    days.push({ m: cur.getMonth()+1, d: cur.getDate() });
+    cur.setDate(cur.getDate()+1);
+  }
+  return days;
+}
+function dayLabel(m,d){
+  const names=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return names[m-1] + ' ' + d;
+}
+
+/* ---------- Combine a field across selected sites for one specific year, aligned to canonical days ---------- */
+function seriesForYear(selSites, field, mode, year, canonicalDays){
+  const vals = [];
+  for (const cd of canonicalDays){
+    const validDay = (cd.m===2 && cd.d===29) ? isLeap(year) : true;
+    if (!validDay){ vals.push(null); continue; }
+    const rec = INDEX.get(`${year}-${cd.m}-${cd.d}`);
+    if (!rec){ vals.push(null); continue; }
+    let sum = 0, cnt = 0;
+    for (const s of selSites){
+      const idx = colIdx(s[field]);
+      const v = rec.row[idx];
+      if (typeof v === 'number' && !isNaN(v)){ sum += v; cnt++; }
+    }
+    if (cnt === 0){ vals.push(null); continue; }
+    vals.push(mode === 'mean' ? sum/cnt : sum);
+  }
+  return vals;
+}
+function isLeap(y){ return (y%4===0 && y%100!==0) || y%400===0; }
+
+/* ---------- Chart.js helpers ---------- */
+function hexA(hex, a){
+  const r=parseInt(hex.slice(1,3),16), g=parseInt(hex.slice(3,5),16), b=parseInt(hex.slice(5,7),16);
+  return `rgba(${r},${g},${b},${a})`;
+}
+function destroyCharts(){
+  if (chart1){ chart1.destroy(); chart1 = null; }
+  if (chart2){ chart2.destroy(); chart2 = null; }
+}
+function baseChartOptions(yLabel, labels){
+  return {
+    responsive:true, maintainAspectRatio:false,
+    interaction:{ mode:'index', intersect:false },
+    plugins:{
+      legend:{ labels:{ color:'#c9d8e6', usePointStyle:true, boxWidth:8, font:{family:'IBM Plex Sans', size:11.5} } },
+      tooltip:{ backgroundColor:'#0d1b2b', borderColor:'#20374f', borderWidth:1, titleColor:'#e9f0f6', bodyColor:'#c9d8e6' }
+    },
+    scales:{
+      x:{ ticks:{ color:'#7e93ab', maxRotation:0, autoSkip:true, font:{family:'IBM Plex Mono', size:10.5} }, grid:{ color:'#182c42' } },
+      y:{ ticks:{ color:'#7e93ab', font:{family:'IBM Plex Mono', size:10.5} }, grid:{ color:'#182c42' }, title:{ display:true, text:yLabel, color:'#7e93ab', font:{family:'IBM Plex Sans', size:11.5} } }
+    }
+  };
+}
+
+/* ---------- Main render ---------- */
+function render(){
+  if (ROWS.length === 0) return;
+  const selSites = getSelectedSites();
+  const selYears = getSelectedYears();
+  const yearMode = selYears.length > 1;
+  const metric = METRICS.find(m => m.id === document.getElementById('metricSelect').value) || METRICS[1];
+  const asOf = new Date(document.getElementById('asOfInput').value + 'T00:00:00');
+  const coM = asOf.getMonth()+1, coD = asOf.getDate();
+  const canonicalDays = buildCanonicalDays(coM, coD);
+  const labels = canonicalDays.map(cd => dayLabel(cd.m, cd.d));
+  const siteLabel = selSites.map(s=>s.key).join(' + ');
+
+  destroyCharts();
+  const chart2Card = document.getElementById('chart2Card');
+  const hasVolChart = (metric.id === 'respct' || metric.id === 'usepct');
+  chart2Card.style.display = hasVolChart ? 'block' : 'none';
+
+  document.getElementById('chart1Title').textContent = `${siteLabel} — ${metric.label}`;
+  document.getElementById('chart1Sub').textContent = yearMode
+    ? `Years: ${selYears.join(', ')} · through ${dayLabel(coM,coD)} (calendar-aligned)`
+    : `YTD ${selYears[0]} · through ${fmtDate(asOf)}`;
+
+  const datasets1 = [];
+
+  if (metric.plan){
+    // Plan vs Actual metrics (Energy, Water Inflow)
+    if (yearMode){
+      selYears.forEach((yr, yi) => {
+        const col = YEAR_COLORS[yi % YEAR_COLORS.length];
+        const actual = seriesForYear(selSites, metric.field, 'sum', yr, canonicalDays);
+        const plan   = seriesForYear(selSites, metric.plan,  'sum', yr, canonicalDays);
+        datasets1.push(mkDataset(`${yr} Actual`, actual, col, metric.volume, false));
+        datasets1.push(mkDataset(`${yr} Plan`, plan, col, false, true));
+      });
+    } else {
+      const yr = selYears[0];
+      const col = SITE_COLORS[0];
+      const actual = seriesForYear(selSites, metric.field, 'sum', yr, canonicalDays);
+      const plan   = seriesForYear(selSites, metric.plan,  'sum', yr, canonicalDays);
+      datasets1.push(mkDataset('Actual', actual, col, metric.volume, false));
+      datasets1.push(mkDataset('Plan', plan, '#8aa0b4', false, true));
+    }
+  } else if (yearMode){
+    // year-compare mode: one series per year, sites combined (sum for rainfall, mean for %/WL)
+    const combine = metric.id === 'rain' ? 'sum' : 'mean';
+    selYears.forEach((yr, yi) => {
+      const col = YEAR_COLORS[yi % YEAR_COLORS.length];
+      const vals = seriesForYear(selSites, metric.field, combine, yr, canonicalDays);
+      datasets1.push(mkDataset(`${yr}`, vals, col, false, false));
+    });
+  } else {
+    // site-compare mode
+    const yr = selYears[0];
+    if (metric.combineDefault === 'each'){
+      selSites.forEach((s, i) => {
+        const col = SITE_COLORS[i % SITE_COLORS.length];
+        const vals = seriesForYear([s], metric.field, 'sum', yr, canonicalDays);
+        datasets1.push(mkDataset(s.key, vals, col, false, false));
+      });
+    } else {
+      const vals = seriesForYear(selSites, metric.field, 'sum', yr, canonicalDays);
+      const lbl = selSites.length > 1 ? 'Sum: ' + siteLabel : siteLabel;
+      datasets1.push(mkDataset(lbl, vals, SITE_COLORS[0], false, false));
+    }
+  }
+
+  chart1 = new Chart(document.getElementById('chart1'), {
+    type:'line',
+    data:{ labels, datasets:datasets1 },
+    options: baseChartOptions(metric.unit, labels)
+  });
+
+  if (hasVolChart){
+    const volField = metric.volField;
+    document.getElementById('chart2Title').textContent = metric.volLabel;
+    document.getElementById('chart2Sub').textContent = 'ບໍລິມາດ (shaded)';
+    const datasets2 = [];
+    if (yearMode){
+      selYears.forEach((yr, yi) => {
+        const col = YEAR_COLORS[yi % YEAR_COLORS.length];
+        const vals = seriesForYear(selSites, volField, 'sum', yr, canonicalDays);
+        datasets2.push(mkDataset(`${yr}`, vals, col, true, false));
+      });
+    } else {
+      const yr = selYears[0];
+      const vals = seriesForYear(selSites, volField, 'sum', yr, canonicalDays);
+      const lbl = selSites.length > 1 ? 'Sum: ' + siteLabel : siteLabel;
+      datasets2.push(mkDataset(lbl, vals, SITE_COLORS[1], true, false));
+    }
+    chart2 = new Chart(document.getElementById('chart2'), {
+      type:'line',
+      data:{ labels, datasets:datasets2 },
+      options: baseChartOptions('MCM', labels)
+    });
+  }
+
+  updateKPIs(selSites, selYears, coM, coD, canonicalDays, siteLabel);
+  updateFleetGauge(coM, coD, canonicalDays);
+}
+
+function mkDataset(label, data, color, filled, isPlan){
+  return {
+    label, data, borderColor: color,
+    backgroundColor: filled ? hexA(color, 0.28) : hexA(color, 0.9),
+    fill: filled ? 'origin' : false,
+    borderDash: isPlan ? [6,4] : undefined,
+    borderWidth: isPlan ? 1.6 : 2,
+    pointRadius: 0, pointHoverRadius: 3, tension:0.2, spanGaps:true
+  };
+}
+
+/* ---------- KPI cards ---------- */
+function updateKPIs(selSites, selYears, coM, coD, canonicalDays, siteLabel){
+  const yr = selYears[selYears.length-1];
+  const eact = seriesForYear(selSites, 'eact', 'sum', yr, canonicalDays);
+  const eplan = seriesForYear(selSites, 'eplan', 'sum', yr, canonicalDays);
+  const rvol = seriesForYear(selSites, 'resvol', 'sum', yr, canonicalDays);
+  const uvol = seriesForYear(selSites, 'usevol', 'sum', yr, canonicalDays);
+  const winA = seriesForYear(selSites, 'waterin', 'sum', yr, canonicalDays);
+  const winP = seriesForYear(selSites, 'planin', 'sum', yr, canonicalDays);
+  const rain = seriesForYear(selSites, 'rain', 'sum', yr, canonicalDays);
+
+  let lastIdx = -1;
+  for (let i = eact.length-1; i>=0; i--) if (eact[i] !== null && eact[i] !== 0){ lastIdx = i; break; }
+  if (lastIdx === -1) lastIdx = eact.length-1;
+
+  const sum = arr => arr.reduce((a,b)=> a + (typeof b==='number'?b:0), 0);
+  const achievement = (eplan[lastIdx] ? 100*eact[lastIdx]/eplan[lastIdx] : 0);
+  const inflowAch = (winP[lastIdx] ? 100*winA[lastIdx]/winP[lastIdx] : 0);
+
+  const cards = [
+    { k:`Reservoir Volume (${yr})`, v:(rvol[lastIdx]!=null? rvol[lastIdx].toFixed(2):'—') + ' <small>MCM</small>' },
+    { k:`Usable Volume (${yr})`, v:(uvol[lastIdx]!=null? uvol[lastIdx].toFixed(2):'—') + ' <small>MCM</small>' },
+    { k:`Energy Actual (${yr})`, v:(eact[lastIdx]!=null? eact[lastIdx].toFixed(3):'—') + ' <small>GWh</small>' },
+    { k:`Energy Achievement`, v: achievement.toFixed(1) + '<small>%</small>', cls: achievement>=95?'good':(achievement>=80?'warn':'bad') },
+    { k:`Water Inflow Actual`, v:(winA[lastIdx]!=null? winA[lastIdx].toFixed(2):'—') + ' <small>MCM</small>' },
+    { k:`Inflow vs Plan`, v: inflowAch.toFixed(1) + '<small>%</small>', cls: inflowAch>=95?'good':(inflowAch>=80?'warn':'bad') },
+    { k:`YTD Rainfall`, v: sum(rain).toFixed(1) + ' <small>mm</small>' },
+    { k:`YTD Energy Plan / Actual`, v: sum(eplan).toFixed(1) + ' / ' + sum(eact).toFixed(1) + ' <small>GWh</small>' },
+  ];
+  const grid = document.getElementById('kpiGrid');
+  grid.innerHTML = cards.map(c => `
+    <div class="kpi">
+      <div class="k">${c.k}</div>
+      <div class="v ${c.cls||''}">${c.v}</div>
+    </div>`).join('');
+}
+
+/* ---------- Fleet-wide reservoir gauge (header) ---------- */
+function updateFleetGauge(coM, coD, canonicalDays){
+  const yr = getSelectedYears()[getSelectedYears().length-1];
+  const allRespct = seriesForYear(SITES, 'respct', 'mean', yr, canonicalDays);
+  const allResvol = seriesForYear(SITES, 'resvol', 'sum', yr, canonicalDays);
+  let i = allRespct.length-1;
+  while (i>=0 && allRespct[i]==null) i--;
+  const pct = i>=0 ? allRespct[i] : 0;
+  const vol = i>=0 ? allResvol[i] : 0;
+  document.getElementById('fleetRing').style.setProperty('--pct', Math.max(0,Math.min(100,pct)));
+  document.getElementById('fleetRingPct').textContent = pct.toFixed(0)+'%';
+  document.getElementById('fleetRingVal').textContent = pct.toFixed(1) + '% · ' + vol.toFixed(1) + ' MCM';
+}
+
+/* ---------- Auto-load if CONFIG.EXCEL_URL is set ---------- */
+window.addEventListener('DOMContentLoaded', () => {
+  if (CONFIG.EXCEL_URL) loadFromUrl(CONFIG.EXCEL_URL);
+});
+</script>
+</body>
+</html>
