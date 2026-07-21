@@ -365,7 +365,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
    anyone pasting a link or uploading a file manually.
    ========================================================================= */
 const CONFIG = {
-  EXCEL_URL: 'https://raw.githubusercontent.com/phaphithoun-cloud/hydropower-dashboard/main/DATA%20CENTER%20for%20CSE%20DOM%20HPP%20_Update.xlsx'   // e.g. 'https://your-tenant-my.sharepoint.com/.../DATA_CENTER_for_CSE_DOM_HPP.xlsx?download=1'
+  EXCEL_URL: ''   // e.g. 'https://your-tenant-my.sharepoint.com/.../DATA_CENTER_for_CSE_DOM_HPP.xlsx?download=1'
 };
 
 /* ---------- Column map (matches the workbook's DATA sheet layout) ---------- */
@@ -486,7 +486,7 @@ function parseWorkbook(arrayBufferOrData){
   // latest date with real "actual energy" data for NEM, used as default As-of date
   const eactIdx = colIdx(SITES[0].eact);
   const withActual = ROWS.filter(r => typeof r.row[eactIdx] === 'number');
-  LATEST_ACTUAL_DATE = withActual.length ? withActual[withActual.length-1].date : ROWS[ROWS.length].date;
+  LATEST_ACTUAL_DATE = withActual.length ? withActual[withActual.length-1].date : ROWS[ROWS.length-1].date;
 
   buildSidebar();
   document.getElementById('layout').style.display = 'grid';
@@ -532,7 +532,7 @@ function buildSidebar(){
   metricSel.addEventListener('change', render);
 
   const asOf = document.getElementById('asOfInput');
-  asOf.value = LATEST_ACTUAL_DATE.toISOString().slice(0,10);
+  asOf.value = toISODateLocal(LATEST_ACTUAL_DATE);
   asOf.min = `${AVAIL_YEARS[0]}-01-01`;
   asOf.max = `${AVAIL_YEARS[AVAIL_YEARS.length-1]}-12-31`;
   asOf.addEventListener('change', render);
@@ -552,6 +552,10 @@ function getSelectedYears(){
 
 /* ---------- Date helpers ---------- */
 function fmtDate(d){ return d.toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' }); }
+function toISODateLocal(d){
+  const y = d.getFullYear(), m = d.getMonth()+1, day = d.getDate();
+  return `${y}-${String(m).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+}
 function clampDay(y, m, d){
   const last = new Date(y, m, 0).getDate(); // days in month m (1-indexed)
   return Math.min(d, last);
@@ -638,7 +642,7 @@ function render(){
   document.getElementById('chart1Title').textContent = `${siteLabel} — ${metric.label}`;
   document.getElementById('chart1Sub').textContent = yearMode
     ? `Years: ${selYears.join(', ')} · ອັບເດດຮອດວັນທີ ${dayLabel(coM,coD)} (calendar-aligned)`
-    : `YTD ${selYears[0]} · through ${fmtDate(asOf)}`;
+    : `YTD ${selYears[0]} · ອັບເດດຮອດວັນທີ ${fmtDate(asOf)}`;
 
   const datasets1 = [];
 
