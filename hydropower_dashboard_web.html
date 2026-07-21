@@ -474,6 +474,7 @@ function parseWorkbook(arrayBufferOrData){
   for (const row of aoa){
     const dt = row[0];
     if (!(dt instanceof Date) || isNaN(dt)) continue;
+    dt.setTime(Math.round(dt.getTime()/60000)*60000);   // ← ເພີ່ມແຖວນີ້: round ໄປຫານາທີ່ໃກ້ສຸດ ແກ້ float error ຂອງ Excel serial date
     const y = dt.getFullYear(), m = dt.getMonth()+1, d = dt.getDate();
     const rec = { date:dt, y, m, d, row };
     ROWS.push(rec);
@@ -641,8 +642,8 @@ function render(){
 
   document.getElementById('chart1Title').textContent = `${siteLabel} — ${metric.label}`;
   document.getElementById('chart1Sub').textContent = yearMode
-    ? `Years: ${selYears.join(', ')} · ອັບເດດຮອດວັນທີ ${dayLabel(coM,coD)} (calendar-aligned)`
-    : `YTD ${selYears[0]} · ອັບເດດຮອດວັນທີ ${fmtDate(asOf)}`;
+    ? `Years: ${selYears.join(', ')} · ສະແດງຂໍ້ມູນເຖີງວັນທີ ${dayLabel(coM,coD)} (calendar-aligned)`
+    : `YTD ${selYears[0]} · ສະແດງຂໍ້ມູນເຖີງວັນທີ ${fmtDate(asOf)}`;
 
   const datasets1 = [];
 
