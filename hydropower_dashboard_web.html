@@ -333,7 +333,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
     <div class="card">
       <h3>Year(s)</h3>
       <div class="chip-list" id="yearList"></div>
-      <div class="hint">ເລືອກ 2+ ປີ ເພື່ອປຽບທຽບແຕ່ລະປີ (ວາງຊ້ອນຕາມວັນທີ່ປະຕິທິນ). ເລືອກ 1 ປີ ເພື່ອປຽບທຽບລະຫວ່າງໄຊต์.</div>
+      <div class="hint">ເລືອກ 2+ ປີ ເພື່ອປຽບທຽບແຕ່ລະປີ (ວາງຊ້ອນຕາມວັນທີ່ປະຕິທິນ). ເລືອກ 1 ປີ ເພື່ອປຽບທຽບລະຫວ່າງເຂື່ອນ.</div>
     </div>
   </div>
 
@@ -486,7 +486,7 @@ function parseWorkbook(arrayBufferOrData){
   // latest date with real "actual energy" data for NEM, used as default As-of date
   const eactIdx = colIdx(SITES[0].eact);
   const withActual = ROWS.filter(r => typeof r.row[eactIdx] === 'number');
-  LATEST_ACTUAL_DATE = withActual.length ? withActual[withActual.length-1].date : ROWS[ROWS.length-1].date;
+  LATEST_ACTUAL_DATE = withActual.length ? withActual[withActual.length-1].date : ROWS[ROWS.length].date;
 
   buildSidebar();
   document.getElementById('layout').style.display = 'grid';
@@ -637,7 +637,7 @@ function render(){
 
   document.getElementById('chart1Title').textContent = `${siteLabel} — ${metric.label}`;
   document.getElementById('chart1Sub').textContent = yearMode
-    ? `Years: ${selYears.join(', ')} · through ${dayLabel(coM,coD)} (calendar-aligned)`
+    ? `Years: ${selYears.join(', ')} · ອັບເດດຮອດວັນທີ ${dayLabel(coM,coD)} (calendar-aligned)`
     : `YTD ${selYears[0]} · through ${fmtDate(asOf)}`;
 
   const datasets1 = [];
