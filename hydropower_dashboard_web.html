@@ -493,7 +493,7 @@ function parseWorkbook(arrayBufferOrData){
   document.getElementById('layout').style.display = 'grid';
   document.getElementById('emptyState').style.display = 'none';
   document.getElementById('dataAsOfLine').textContent =
-    'ຂໍ້ມູນຫຼ້າສຸດຮອດ 24ໂມງ ຂອງວັນທີ ' + fmtDate(LATEST_ACTUAL_DATE) + ' · ' + ROWS.length + ' ແຖວ (' + AVAIL_YEARS[0] + '–' + AVAIL_YEARS[AVAIL_YEARS.length-1] + ')';
+    'ຂໍ້ມູນຫຼ້າສຸດຮອດ 24ໂມງ ຂອງວັນທີ ' + fmtDate(LATEST_ACTUAL_DATE) +   '(' + AVAIL_YEARS[0] + '–' + AVAIL_YEARS[AVAIL_YEARS.length-1] + ')';
 
   render();
 }
