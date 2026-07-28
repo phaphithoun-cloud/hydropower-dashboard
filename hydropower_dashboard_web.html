@@ -771,29 +771,49 @@ function updateKPIs(selSites, selYears, coM, coD, canonicalDays, siteLabel){
   const winP = seriesForYear(selSites, 'planin', 'sum', yr, canonicalDays);
   const rain = seriesForYear(selSites, 'rain', 'sum', yr, canonicalDays);
 
-  let lastIdx = -1;
-  for (let i = eact.length-1; i>=0; i--) if (eact[i] !== null && eact[i] !== 0){ lastIdx = i; break; }
-  if (lastIdx === -1) lastIdx = eact.length-1;
-
+//  let lastIdx = -1;
+//  for (let i = eact.length-1; i>=0; i--) if (eact[i] !== null && eact[i] !== 0){ lastIdx = i; break; }
+//  if (lastIdx === -1) lastIdx = eact.length-1;
+const lastValid = (arr) => {
+  for (let i = arr.length-1; i>=0; i--) if (arr[i] !== null) return i;
+  return arr.length-1;
+};
+const lastIdx = lastValid(eact);   // ໃຊ້ສຳລັບ Energy Actual + ວັນທີ່ຫຼັກ
+const idxR = lastValid(rvol);      // ວັນສຸດທ້າຍທີ່ Reservoir Volume ມີຄ່າ
+const idxU = lastValid(uvol);      // ວັນສຸດທ້າຍທີ່ Usable Volume ມີຄ່າ
+const idxW = lastValid(winA);      // ວັນສຸດທ້າຍທີ່ Water Inflow ມີຄ່າ
+  
   const cd = canonicalDays[lastIdx];
   const latestDate = new Date(yr, cd.m-1, cd.d);
   const dateLabel = fmtDate(latestDate);
 
   const sum = arr => arr.reduce((a,b)=> a + (typeof b==='number'?b:0), 0);
+ // const achievement = (eplan[lastIdx] ? 100*eact[lastIdx]/eplan[lastIdx] : 0);
+ // const inflowAch = (winP[lastIdx] ? 100*winA[lastIdx]/winP[lastIdx] : 0);
   const achievement = (eplan[lastIdx] ? 100*eact[lastIdx]/eplan[lastIdx] : 0);
-  const inflowAch = (winP[lastIdx] ? 100*winA[lastIdx]/winP[lastIdx] : 0);
+  const inflowAch = (winP[idxW] ? 100*winA[idxW]/winP[idxW] : 0);
   const achCls = achievement>=95?'good':(achievement>=80?'warn':'bad');
   const inflCls = inflowAch>=95?'good':(inflowAch>=80?'warn':'bad');
 const ytdAchievement = (sum(eplan) ? 100*sum(eact)/sum(eplan) : 0);
 const ytdAchCls = ytdAchievement>=95?'good':(ytdAchievement>=80?'warn':'bad');
   
   const cards = [
-    { k:`Reservoir Volume (${dateLabel})`, v:(rvol[lastIdx]!=null? rvol[lastIdx].toFixed(2):'—') + ' <small>MCM</small>' },
-    { k:`Usable Volume (${dateLabel})`, v:(uvol[lastIdx]!=null? uvol[lastIdx].toFixed(2):'—') + ' <small>MCM</small>' },
-    { k:`Energy Actual (ພາຍໃນມື້: ${dateLabel})`, v:(eact[lastIdx]!=null? eact[lastIdx].toFixed(3):'—') + ' <small>GWh</small>',
-      sub: `${achievement.toFixed(1)}% of plan`, subCls: achCls },
-    { k:`Water Inflow Actual (ພາຍໃນມື້: ${dateLabel})`, v:(winA[lastIdx]!=null? winA[lastIdx].toFixed(2):'—') + ' <small>MCM</small>',
-      sub: `${inflowAch.toFixed(1)}% of plan`, subCls: inflCls },
+ //  { k:`Reservoir Volume (${dateLabel})`, v:(rvol[lastIdx]!=null? rvol[lastIdx].toFixed(2):'—') + ' <small>MCM</small>' },
+ //   { k:`Usable Volume (${dateLabel})`, v:(uvol[lastIdx]!=null? uvol[lastIdx].toFixed(2):'—') + ' <small>MCM</small>' },
+ //   { k:`Energy Actual (ພາຍໃນມື້: ${dateLabel})`, v:(eact[lastIdx]!=null? eact[lastIdx].toFixed(3):'—') + ' <small>GWh</small>',
+ //     sub: `${achievement.toFixed(1)}% of plan`, subCls: achCls },
+ //   { k:`Water Inflow Actual (ພາຍໃນມື້: ${dateLabel})`, v:(winA[lastIdx]!=null? winA[lastIdx].toFixed(2):'—') + ' <small>MCM</small>',
+ //     sub: `${inflowAch.toFixed(1)}% of plan`, subCls: inflCls },
+{ k:`Reservoir Volume (${fmtDate(new Date(yr, canonicalDays[idxR].m-1, canonicalDays[idxR].d))})`,
+  v:(rvol[idxR]!=null? rvol[idxR].toFixed(2):'—') + ' <small>MCM</small>' },
+{ k:`Usable Volume (${fmtDate(new Date(yr, canonicalDays[idxU].m-1, canonicalDays[idxU].d))})`,
+  v:(uvol[idxU]!=null? uvol[idxU].toFixed(2):'—') + ' <small>MCM</small>' },
+{ k:`Energy Actual (ພາຍໃນມື້: ${dateLabel})`, v:(eact[lastIdx]!=null? eact[lastIdx].toFixed(3):'—') + ' <small>GWh</small>',
+  sub: `${achievement.toFixed(1)}% of plan`, subCls: achCls },
+{ k:`Water Inflow Actual (ພາຍໃນມື້: ${fmtDate(new Date(yr, canonicalDays[idxW].m-1, canonicalDays[idxW].d))})`,
+  v:(winA[idxW]!=null? winA[idxW].toFixed(2):'—') + ' <small>MCM</small>',
+  sub: `${inflowAch.toFixed(1)}% of plan`, subCls: inflCls },
+    
     { k:`YTD Rainfall`, v: sum(rain).toFixed(1) + ' <small>mm</small>' },
     { k:`YTD Energy Plan / Actual (ສະສົມທຽບແຜນປີ)`, v: sum(eplan).toFixed(1) + ' / ' + sum(eact).toFixed(1) + ' <small>GWh</small>',
   sub: `${ytdAchievement.toFixed(1)}% of plan`, subCls: ytdAchCls },
