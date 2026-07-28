@@ -267,7 +267,15 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
 
   footer{padding:20px 28px 40px; color:var(--text-dim); font-size:11.5px; font-family:var(--mono);}
 </style>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0B2A5B">
+  <link rel="apple-touch-icon" href="icon-192.png">
 </head>
+  <script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('service-worker.js');
+  }
+  </script>
 <body>
 
 <header>
