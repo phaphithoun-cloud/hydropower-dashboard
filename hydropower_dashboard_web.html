@@ -790,12 +790,12 @@ const ytdAchCls = ytdAchievement>=95?'good':(ytdAchievement>=80?'warn':'bad');
   const cards = [
     { k:`Reservoir Volume (${dateLabel})`, v:(rvol[lastIdx]!=null? rvol[lastIdx].toFixed(2):'—') + ' <small>MCM</small>' },
     { k:`Usable Volume (${dateLabel})`, v:(uvol[lastIdx]!=null? uvol[lastIdx].toFixed(2):'—') + ' <small>MCM</small>' },
-    { k:`Energy Actual (${dateLabel})`, v:(eact[lastIdx]!=null? eact[lastIdx].toFixed(3):'—') + ' <small>GWh</small>',
+    { k:`Energy Actual (ພາຍໃນມື້: ${dateLabel})`, v:(eact[lastIdx]!=null? eact[lastIdx].toFixed(3):'—') + ' <small>GWh</small>',
       sub: `${achievement.toFixed(1)}% of plan`, subCls: achCls },
-    { k:`Water Inflow Actual (${dateLabel})`, v:(winA[lastIdx]!=null? winA[lastIdx].toFixed(2):'—') + ' <small>MCM</small>',
+    { k:`Water Inflow Actual (ພາຍໃນມື້: ${dateLabel})`, v:(winA[lastIdx]!=null? winA[lastIdx].toFixed(2):'—') + ' <small>MCM</small>',
       sub: `${inflowAch.toFixed(1)}% of plan`, subCls: inflCls },
     { k:`YTD Rainfall`, v: sum(rain).toFixed(1) + ' <small>mm</small>' },
-    { k:`YTD Energy Plan / Actual (ທຽບແຜນປີ)`, v: sum(eplan).toFixed(1) + ' / ' + sum(eact).toFixed(1) + ' <small>GWh</small>',
+    { k:`YTD Energy Plan / Actual (ສະສົມທຽບແຜນປີ)`, v: sum(eplan).toFixed(1) + ' / ' + sum(eact).toFixed(1) + ' <small>GWh</small>',
   sub: `${ytdAchievement.toFixed(1)}% of plan`, subCls: ytdAchCls },
   ];
   const grid = document.getElementById('kpiGrid');
