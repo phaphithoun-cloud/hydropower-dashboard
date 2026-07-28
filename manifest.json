@@ -1,0 +1,32 @@
+{
+  "name": "CSE Hydropower Data",
+  "short_name": "CSE Hydropower",
+  "description": "ຂໍ້ມູນພະລັງງານໄຟຟ້າທັງ 6 ເຂື່ອນ ຂອງບໍລິສັດຈະເລີນເຊກອງ ພະລັງງານ",
+  "start_url": "./hydropower_dashboard_web.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#EAF3FB",
+  "theme_color": "#0B2A5B",
+  "lang": "lo",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
