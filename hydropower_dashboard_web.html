@@ -539,7 +539,7 @@ function buildSidebar(){
     metricSel.appendChild(opt);
   });
   metricSel.addEventListener('change', render);
-
+metricSel.value = 'energy'; //ເພື່ອສະແດງຄ່າພະລັງງານໃຫ້ເປັນໜ້າເລີ່ມຕົ້ນ
   const asOf = document.getElementById('asOfInput');
   asOf.value = toISODateLocal(LATEST_ACTUAL_DATE);
   asOf.min = `${AVAIL_YEARS[0]}-01-01`;
