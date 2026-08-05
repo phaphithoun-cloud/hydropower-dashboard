@@ -293,7 +293,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
       <div class="ring-label" style="left:6px; top:14px;" id="fleetRingPct">--%</div>
     </div>
     <div class="txt">
-      <div class="k">Fleet Reservoir (all sites)</div>
+      <div class="k">ບໍລິມາດນໍ້າທັງໝົດ Reservoir (all sites)</div>
       <div class="v" id="fleetRingVal">-- % · -- MCM</div>
     </div>
   </div>
@@ -732,7 +732,7 @@ function render(){
   if (hasVolChart){
     const volField = metric.volField;
     document.getElementById('chart2Title').textContent = metric.volLabel;
-    document.getElementById('chart2Sub').textContent = 'ບໍລິມາດ (shaded)';
+    document.getElementById('chart2Sub').textContent = 'ບໍລິມາດ';
     const datasets2 = [];
     if (yearMode){
       selYears.forEach((yr, yi) => {
