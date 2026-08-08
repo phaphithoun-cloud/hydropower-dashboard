@@ -380,12 +380,12 @@ const CONFIG = {
 /* ---------- Column map (matches the workbook's DATA sheet layout) ---------- */
 const SITES = [
   { key:'NEM',        rain:'B',  planin:'C',  waterin:'D',  waterout:'E',  overflow:'F',  resvol:'G',  respct:'H',  usevol:'I',  usepct:'J',  wlmax:'K',  wlmin:'L',  wl:'M',  eplan:'O',  eact:'P'  },
-  { key:'NK3',        rain:'Q',  planin:'R',  waterin:'S',  waterout:'T',  overflow:'U',  resvol:'V',  respct:'W',  usevol:'X',  usepct:'Y',  wlmax:'Z',  wlmin:'AA', wl:'AC', eplan:'AD', eact:'AE' },
-  { key:'NK2',        rain:'AF', planin:'AG', waterin:'AH', waterout:'AI', overflow:'AJ', resvol:'AK', respct:'AL', usevol:'AM', usepct:'AN', wlmax:'AO', wlmin:'AP', wl:'AR', eplan:'AS', eact:'AT' },
+  { key:'NK3',        rain:'Q',  planin:'R',  waterin:'S',  waterout:'T',  overflow:'U',  resvol:'V',  respct:'W',  usevol:'X',  usepct:'Y',  wlmax:'Z',  wlmin:'AA', wlplan:'AB', wl:'AC', eplan:'AD', eact:'AE' }, //ເພີ່ມແຜນລະດັບນໍ້າ
+  { key:'NK2',        rain:'AF', planin:'AG', waterin:'AH', waterout:'AI', overflow:'AJ', resvol:'AK', respct:'AL', usevol:'AM', usepct:'AN', wlmax:'AO', wlmin:'AP', wlplan:'AQ', wl:'AR', eplan:'AS', eact:'AT' }, //ເພີ່ມແຜນລະດັບນໍ້າ
   { key:'NNG3A',      rain:'AU', planin:'AV', waterin:'AW', waterout:'AX', overflow:'AY', resvol:'AZ', respct:'BA', usevol:'BB', usepct:'BC', wlmax:'BD', wlmin:'BE', wl:'BF', eplan:'BG', eact:'BH' },
   { key:'XNN1',       rain:'BI', planin:'BJ', waterin:'BK', waterout:'BL', overflow:'BM', resvol:'BN', respct:'BO', usevol:'BP', usepct:'BQ', wlmax:'BR', wlmin:'BS', wl:'BT', eplan:'BU', eact:'BV' },
-  { key:'NSPC (US)',  rain:'BW', planin:'BX', waterin:'BY', waterout:'BZ', overflow:'CA', resvol:'CB', respct:'CC', usevol:'CD', usepct:'CE', wlmax:'CF', wlmin:'CG', wl:'CI', eplan:'CJ', eact:'CK' },
-  { key:'NSPC (DS)',  rain:'CL', planin:'CM', waterin:'CN', waterout:'CO', overflow:'CP', resvol:'CQ', respct:'CR', usevol:'CS', usepct:'CT', wlmax:'CU', wlmin:'CV', wl:'CX', eplan:'CY', eact:'CZ' },
+  { key:'NSPC (US)',  rain:'BW', planin:'BX', waterin:'BY', waterout:'BZ', overflow:'CA', resvol:'CB', respct:'CC', usevol:'CD', usepct:'CE', wlmax:'CF', wlmin:'CG', wlplan:'CH', wl:'CI', eplan:'CJ', eact:'CK' }, //ເພີ່ມແຜນລະດັບນໍ້າ
+  { key:'NSPC (DS)',  rain:'CL', planin:'CM', waterin:'CN', waterout:'CO', overflow:'CP', resvol:'CQ', respct:'CR', usevol:'CS', usepct:'CT', wlmax:'CU', wlmin:'CV', wlplan:'CW', wl:'CX', eplan:'CY', eact:'CZ' }, //ເພີ່ມແຜນລະດັບນໍ້າ
 ];
 
 const METRICS = [
@@ -525,7 +525,8 @@ function buildSidebar(){
   AVAIL_YEARS.forEach((y, i) => {
     const id = 'year_' + y;
     const div = document.createElement('label');
-    const isLatest = y === AVAIL_YEARS[AVAIL_YEARS.length-1];
+   // const isLatest = y === AVAIL_YEARS[AVAIL_YEARS.length-1];
+    const isLatest = y === LATEST_ACTUAL_DATE.getFullYear(); // ເພື່ອກໍານົດປີທີ່ສະແດງໜ້າທໍາອິດ ເປັນ ປີຂໍ້ມູນຫຼ້າສຸດ
     div.className = 'chip' + (isLatest ? ' active' : '');
     div.innerHTML = `<input type="checkbox" id="${id}" ${isLatest?'checked':''}> ${y}`;
     div.querySelector('input').addEventListener('change', () => { div.classList.toggle('active'); render(); });
@@ -716,8 +717,14 @@ function render(){
         const col = SITE_COLORS[i % SITE_COLORS.length];
         const vals = seriesForYear([s], metric.field, 'sum', yr, canonicalDays);
         datasets1.push(mkDataset(s.key, vals, col, false, false));
+        if (metric.id === 'wl' && s.wlplan) {
+          const planVals = seriesForYear([s], 'wlplan', 'sum', yr, canonicalDays); //ເພີ່ມເສັ້ນແຜນລະດັບນໍ້າ
+          datasets1.push(mkDataset(s.key + ' Plan', planVals, col, false, true)); //ເພີ່ມເສັ້ນແຜນລະດັບນໍ້າ
+         }
       });
-    } else {
+    } 
+    
+    else {
       const vals = seriesForYear(selSites, metric.field, 'sum', yr, canonicalDays);
       const lbl = selSites.length > 1 ? 'Sum: ' + siteLabel : siteLabel;
       datasets1.push(mkDataset(lbl, vals, SITE_COLORS[0], false, false));
