@@ -812,6 +812,8 @@ const idxW = lastValid(winA);      // ວັນສຸດທ້າຍທີ່ Wa
   const inflCls = inflowAch>=95?'good':(inflowAch>=80?'warn':'bad');
 const ytdAchievement = (sum(eplan) ? 100*sum(eact)/sum(eplan) : 0);
 const ytdAchCls = ytdAchievement>=95?'good':(ytdAchievement>=80?'warn':'bad');
+const ytdInflowAch = (sum(winP) ? 100*sum(winA)/sum(winP) : 0); //ສົມທຽບ inflow ກັບ ແຜນປີ
+const ytdInflowCls = ytdInflowAch>=95?'good':(ytdInflowAch>=80?'warn':'bad'); //ສົມທຽບ inflow ກັບ ແຜນປີ
   
   const cards = [
  //  { k:`Reservoir Volume (${dateLabel})`, v:(rvol[lastIdx]!=null? rvol[lastIdx].toFixed(2):'—') + ' <small>MCM</small>' },
@@ -833,6 +835,8 @@ const ytdAchCls = ytdAchievement>=95?'good':(ytdAchievement>=80?'warn':'bad');
     { k:`YTD Rainfall`, v: sum(rain).toFixed(1) + ' <small>mm</small>' },
     { k:`YTD Energy Plan / Actual (ສະສົມທຽບແຜນປີ)`, v: sum(eplan).toFixed(1) + ' / ' + sum(eact).toFixed(1) + ' <small>GWh</small>',
   sub: `${ytdAchievement.toFixed(1)}% of plan`, subCls: ytdAchCls },
+  { k:`YTD Water Inflow Plan / Actual (ສະສົມທຽບແຜນປີ)`, v: sum(winP).toFixed(1) + ' / ' + sum(winA).toFixed(1) + ' <small>MCM</small>',
+  sub: `${ytdInflowAch.toFixed(1)}% of plan`, subCls: ytdInflowCls }, //ເພີ່ມກາຟ ສົມທຽບ inflow ກັບ ແຜນປີ
   ];
   const grid = document.getElementById('kpiGrid');
   grid.innerHTML = cards.map(c => `
