@@ -739,6 +739,9 @@ function render(){
     borderDash: [2,3], borderWidth: 1, pointRadius: 0, tension: 0, spanGaps: true
   });
 }  
+          });
+        }
+      
     else {
       const vals = seriesForYear(selSites, metric.field, 'sum', yr, canonicalDays);
       const lbl = selSites.length > 1 ? 'Sum: ' + siteLabel : siteLabel;
