@@ -730,7 +730,7 @@ function render(){
   const minVals = seriesForYear([s], 'wlmin', 'sum', yr, canonicalDays);
   datasets1.push({
     label: s.key + ' Max WL', data: maxVals,
-    borderColor: hexA(col, 0.35), backgroundColor: 'transparent', fill: false,
+    borderColor: hexA(col, 0.8), backgroundColor: 'transparent', fill: false,
     borderDash: [2,3], borderWidth: 1, pointRadius: 0, tension: 0, spanGaps: true
   });
   datasets1.push({
