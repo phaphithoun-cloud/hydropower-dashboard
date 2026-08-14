@@ -717,13 +717,28 @@ function render(){
         const col = SITE_COLORS[i % SITE_COLORS.length];
         const vals = seriesForYear([s], metric.field, 'sum', yr, canonicalDays);
         datasets1.push(mkDataset(s.key, vals, col, false, false));
-        if (metric.id === 'wl' && s.wlplan) {
-          const planVals = seriesForYear([s], 'wlplan', 'sum', yr, canonicalDays); //ເພີ່ມເສັ້ນແຜນລະດັບນໍ້າ
-          datasets1.push(mkDataset(s.key + ' Plan', planVals, col, false, true)); //ເພີ່ມເສັ້ນແຜນລະດັບນໍ້າ
-         }
-      });
-    } 
-    
+  //  if (metric.id === 'wl' && s.wlplan) {
+  //   const planVals = seriesForYear([s], 'wlplan', 'sum', yr, canonicalDays); //ເພີ່ມເສັ້ນແຜນລະດັບນໍ້າ
+  //   datasets1.push(mkDataset(s.key + ' Plan', planVals, col, false, true)); //ເພີ່ມເສັ້ນແຜນລະດັບນໍ້າ
+  //  }
+      if (metric.id === 'wl') {
+  if (s.wlplan) {
+    const planVals = seriesForYear([s], 'wlplan', 'sum', yr, canonicalDays);
+    datasets1.push(mkDataset(s.key + ' Plan', planVals, col, false, true));
+  }
+  const maxVals = seriesForYear([s], 'wlmax', 'sum', yr, canonicalDays);
+  const minVals = seriesForYear([s], 'wlmin', 'sum', yr, canonicalDays);
+  datasets1.push({
+    label: s.key + ' Max WL', data: maxVals,
+    borderColor: hexA(col, 0.35), backgroundColor: 'transparent', fill: false,
+    borderDash: [2,3], borderWidth: 1, pointRadius: 0, tension: 0, spanGaps: true
+  });
+  datasets1.push({
+    label: s.key + ' Min WL', data: minVals,
+    borderColor: hexA(col, 0.35), backgroundColor: 'transparent', fill: false,
+    borderDash: [2,3], borderWidth: 1, pointRadius: 0, tension: 0, spanGaps: true
+  });
+}  
     else {
       const vals = seriesForYear(selSites, metric.field, 'sum', yr, canonicalDays);
       const lbl = selSites.length > 1 ? 'Sum: ' + siteLabel : siteLabel;
